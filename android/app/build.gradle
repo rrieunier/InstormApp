@@ -137,6 +137,12 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-linear-gradient')
+    compile project(':react-native-blur-overlay')
+    compile project(':react-native-blur')
+    compile project(':react-native-vector-icons')
+    compile project(':react-native-keep-awake')
+    compile project(':react-native-gesture-handler')
     compile project(':rn-fetch-blob')
     compile project(':react-native-sound')
     compile project(':react-native-audio')
