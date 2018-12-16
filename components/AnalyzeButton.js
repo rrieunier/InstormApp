@@ -1,10 +1,23 @@
 import React, {Component} from 'react';
-import {Animated, Easing, Platform, StyleSheet, Text, TouchableHighlight, TouchableOpacity, View} from "react-native";
+import {
+    Animated,
+    Alert,
+    Easing,
+    Platform,
+    StyleSheet,
+    Text,
+    TouchableHighlight,
+    TouchableOpacity,
+    View
+} from "react-native";
 import {AudioRecorder, AudioUtils} from "react-native-audio";
 import Sound from "react-native-sound";
 import RNFetchBlob from "rn-fetch-blob";
 
-export default class AnalyzeButton extends Component {
+import Recognition from "../screens/Recognition";
+import {withNavigation} from 'react-navigation';
+
+class AnalyzeButton extends Component {
 
     constructor(props) {
         super(props);
@@ -12,7 +25,7 @@ export default class AnalyzeButton extends Component {
         this._spin = new Animated.Value(0);
         this._pulse = new Animated.Value(0);
         this._recordingDelay = 0;
-        this._predictUrl = "172.20.10.2";
+        this._predictUrl = "192.168.1.25";
 
         this.state = {
             currentTime: 0.0,
@@ -22,7 +35,7 @@ export default class AnalyzeButton extends Component {
             finished: false,
             number: 0,
             audioPath: AudioUtils.DocumentDirectoryPath + `/test${++this._number}.aac`,
-            hasPermission: undefined
+            hasPermission: undefined,
         };
     }
 
@@ -40,9 +53,10 @@ export default class AnalyzeButton extends Component {
 
             AudioRecorder.onFinished = (data) => {
                 this.setState({sound: data});
+                this._uploadRecording(data.base64);
                 // Android callback comes in the form of a promise instead.
                 if (Platform.OS === 'ios') {
-                    this._finishRecording(data.status === "OK", data.audioFileURL, data.audioFileSize);
+                    // this._finishRecording(data.status === "OK", data.audioFileURL, data.audioFileSize);
                 }
             };
         });
@@ -182,35 +196,37 @@ export default class AnalyzeButton extends Component {
         }
     }
 
-    _finishRecording(didSucceed, filePath, fileSize) {
-        this.setState({finished: didSucceed});
-        console.log(`Finished recording of duration ${this.state.currentTime} seconds at path: ${filePath} and size of ${fileSize || 0} bytes`);
-    }
-
-    _uploadRecording() {
-        this._stop();
-        setTimeout(() => {
-            RNFetchBlob.fetch('POST', `http://${this._predictUrl}:5005/predict`, {
-                'Content-Type': 'multipart/form-data',
-            }, [
-                {
-                    name: 'audio',
-                    filename: 'test.aac',
-                    data: this.state.sound.base64
-                },
-            ])
-            // .uploadProgress((written, total) => {
-            //     this.setState({uploadProgress: Math.floor(written) * 10 / Math.floor(total) * 10});
-            // })
-                .then((response) => response.json())
-                .then((responseJson) => {
-                    console.warn(responseJson.prediction);
-                    return responseJson.success;
-                })
-                .catch((error) => {
-                    console.error(error);
-                })
-        }, 1500);
+    _uploadRecording(base64) {
+        RNFetchBlob.fetch('POST', `http://${this._predictUrl}:5005/predict`, {
+            'Content-Type': 'multipart/form-data',
+        }, [
+            {
+                name: 'audio',
+                filename: 'test.aac',
+                data: base64
+            },
+        ])
+        // .uploadProgress((written, total) => {
+        //     this.setState({uploadProgress: Math.floor(written) * 10 / Math.floor(total) * 10});
+        // })
+            .then(response => response.json())
+            .then(responseJson => responseJson.prediction.map((value, index) => {
+                return {id: index, instrument: value};
+            }))
+            .then(prediction => {
+                // console.warn(prediction);
+                if (prediction.length > 0) {
+                    this.props.navigation.navigate('Recognition', {
+                        instruments: prediction
+                    });
+                } else {
+                    Alert.alert("Échec de la reconnaissance", "Aucun instrument n'a été reconnu. Vous pouvez réessayer en vous rapprochant de la source sonore ou en augmentant le volume de la musique.");
+                }
+            })
+            .catch((error) => {
+                Alert.alert("Échec de la reconnaissance", "Aucun instrument n'a été reconnu. Vous pouvez réessayer en vous rapprochant de la source sonore ou en augmentant le volume de la musique.");
+                console.warn(error);
+            });
     }
 
     rotateButton = () => {
@@ -244,10 +260,10 @@ export default class AnalyzeButton extends Component {
         if (!this.state.recording) {
             this.pulseButton();
             this._record();
-            this._recordingDelay = setTimeout(() => this._uploadRecording(), 20000);
+            this._recordingDelay = setTimeout(() => this._stop(), 20000);
         } else {
+            this._stop();
             clearTimeout(this._recordingDelay);
-            this._uploadRecording();
             // this._play();
         }
     };
@@ -294,6 +310,8 @@ export default class AnalyzeButton extends Component {
         );
     }
 }
+
+export default withNavigation(AnalyzeButton);
 
 const styles = StyleSheet.create({
     controls: {

@@ -15,7 +15,9 @@ import {
     View
 } from 'react-native';
 import AnalyzeButton from "../components/AnalyzeButton";
-import LinearGradient from 'react-native-linear-gradient'
+import LinearGradient from 'react-native-linear-gradient';
+
+import {Fonts} from "../src/utils/Fonts";
 
 export default class Home extends Component {
 
@@ -56,7 +58,8 @@ export default class Home extends Component {
 const styles = StyleSheet.create({
     container: {
         flexDirection: "column",
-        justifyContent: "flex-start"
+        justifyContent: "flex-start",
+        alignItems: "flex-start"
     },
     controls: {
         justifyContent: 'center',
@@ -64,10 +67,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     h1: {
-        fontSize: 64,
+        fontSize: 72,
         fontWeight: "200",
         color: "#fff",
-        textAlign: "center"
+        textAlign: "center",
+        fontFamily: Fonts.KaushanScript
     },
     progressText: {
         paddingTop: 20,

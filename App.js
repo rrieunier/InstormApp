@@ -1,15 +1,16 @@
 import React, {Component} from "react";
-import {View, TouchableOpacity, StyleSheet} from "react-native";
+import {View, TouchableOpacity, StatusBar, StyleSheet} from "react-native";
 import {createStackNavigator, createAppContainer} from "react-navigation";
 import History from "./screens/History";
 import Home from "./screens/Home";
 import Settings from "./screens/Settings";
+import Recognition from "./screens/Recognition";
 
 import Swiper from 'react-native-swiper';
 import KeepAwake from 'react-native-keep-awake';
 import Icon from './components/Icon';
 
-export default class App extends Component {
+class App extends Component {
 
     constructor(props) {
         super(props);
@@ -20,6 +21,21 @@ export default class App extends Component {
 
         KeepAwake.activate();
     }
+
+    componentDidMount() {
+        StatusBar.setBarStyle('light-content');
+    }
+
+    static navigationOptions = {
+        headerStyle: {
+            height: 0,
+            backgroundColor: "#000",
+            borderBottomColor: "#000"
+        },
+        headerTintColor: "#36A9E1",
+        headerTitleStyle: {
+        }
+    };
 
     swipe(dest) {
         let to = dest - this.state.index;
@@ -57,6 +73,18 @@ export default class App extends Component {
     }
 }
 
+const AppNavigator = createStackNavigator({
+        App: App,
+        Recognition: Recognition
+    },
+    {
+        initialRouteName: "App",
+        // headerMode: "none"
+    }
+);
+
+export default createAppContainer(AppNavigator);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -91,15 +119,3 @@ const styles = StyleSheet.create({
         backgroundColor: '#951B81',
     }
 });
-
-// const AppNavigator = createStackNavigator({
-//         History: History,
-//         Home: Home,
-//         Setting: Settings,
-//     },
-//     {
-//         initialRouteName: "Home"
-//     }
-// );
-
-// export default createAppContainer(AppNavigator);

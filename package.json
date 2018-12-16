@@ -4,7 +4,8 @@
   "private": true,
   "rnpm": {
     "assets": [
-      ".assets/fonts"
+      "./assets/audio/",
+      "./assets/fonts/"
     ]
   },
   "scripts": {
